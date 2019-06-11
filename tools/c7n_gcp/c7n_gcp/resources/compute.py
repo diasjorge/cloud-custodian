@@ -20,6 +20,7 @@ from c7n_gcp.actions import MethodAction
 from c7n_gcp.provider import resources
 from c7n_gcp.query import QueryResourceManager, TypeInfo
 
+from c7n.filters.core import AgeFilter, OPERATORS
 from c7n.filters.offhours import OffHour, OnHour
 
 
@@ -112,6 +113,27 @@ class Image(QueryResourceManager):
                         'resourceId': resource_info['image_id']})
 
 
+@Image.filter_registry.register('image-age')
+class ImageAgeFilter(AgeFilter):
+    """Filters images based on the age (in days)
+
+    :example:
+
+    .. code-block:: yaml
+
+            policies:
+              - name: image-delete-old
+                resource: ami
+                filters:
+                  - type: image-age
+                    days: 30
+    """
+
+    date_attribute = "creationTimestamp"
+    schema = type_schema(
+        'image-age',
+        op={'$ref': '#/definitions/filters_common/comparison_operators'},
+        days={'type': 'number', 'minimum': 0})
 @resources.register('disk')
 class Disk(QueryResourceManager):
 
